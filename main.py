@@ -1,40 +1,50 @@
-from scenes import generate_scenes
-from video import create_video
+import requests
 import os
 
-# Geçici placeholder görseller
-PLACEHOLDER_IMAGE = "https://via.placeholder.com/720x1280.png"
+API_URL = "https://api-inference.huggingface.co/models/gpt2"
 
-def download_placeholder(path):
-    import requests
-    r = requests.get(PLACEHOLDER_IMAGE)
-    with open(path, "wb") as f:
-        f.write(r.content)
+
+def call_ai(text):
+    payload = {
+        "inputs": text
+    }
+
+    r = requests.post(API_URL, json=payload)
+
+    # HuggingFace bazen liste döner
+    data = r.json()
+
+    if isinstance(data, list) and "generated_text" in data[0]:
+        return data[0]["generated_text"]
+    else:
+        return str(data)
+
+
+def generate_scenes(text):
+    prompt = f"""
+Metni analiz et.
+YouTube Shorts ve uzun video için ayrı sahneler üret.
+Her sahne 2-3 saniye olsun.
+JSON formatında dön.
+
+Metin:
+{text}
+"""
+    return call_ai(prompt)
 
 
 def main():
-    os.makedirs("output/images", exist_ok=True)
-    os.makedirs("output/videos", exist_ok=True)
+    text = "Karanlık bir şehirde geçen anime horror hikayesi yaz."
 
-    text = "Karanlık bir şehirde geçen gizemli bir anime horror hikayesi."
+    print("⏳ AI çalışıyor...")
+    result = generate_scenes(text)
 
-    scenes = generate_scenes(text)
+    print("\n✅ AI ÇIKTISI:\n")
+    print(result)
 
-    # SHORTS
-    shorts_images = []
-    shorts_durations = []
 
-    for s in scenes["shorts"]:
-        img_path = f"output/images/short_{s['scene']}.png"
-        download_placeholder(img_path)
-        shorts_images.append(img_path)
-        shorts_durations.append(s["duration"])
-
-    create_video(
-        shorts_images,
-        shorts_durations,
-        "output/videos/shorts.mp4",
-        size=(720, 1280)
+if __name__ == "__main__":
+    main()        size=(720, 1280)
     )
 
     # LONG
