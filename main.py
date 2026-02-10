@@ -1,40 +1,64 @@
+from scenes import generate_scenes
+from video import create_video
 import os
-import requests
-import json
 
-HF_TOKEN = os.environ["HF_TOKEN"]
+# Geçici placeholder görseller
+PLACEHOLDER_IMAGE = "https://via.placeholder.com/720x1280.png"
 
-LLM_MODEL = "Qwen/Qwen2.5-7B-Instruct"
-API_URL = f"https://api-inference.huggingface.co/models/{LLM_MODEL}"
+def download_placeholder(path):
+    import requests
+    r = requests.get(PLACEHOLDER_IMAGE)
+    with open(path, "wb") as f:
+        f.write(r.content)
 
-headers = {
-    "Authorization": f"Bearer {HF_TOKEN}",
-    "Content-Type": "application/json"
-}
 
-def generate_scenes(text):
-    prompt = f"""
-Metni analiz et.
-YouTube Shorts ve uzun video için ayrı sahneler üret.
-Her sahne 2-3 saniye olsun.
-JSON formatında dön.
+def main():
+    os.makedirs("output/images", exist_ok=True)
+    os.makedirs("output/videos", exist_ok=True)
 
-Metin:
-{text}
-"""
+    text = "Karanlık bir şehirde geçen gizemli bir anime horror hikayesi."
 
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 700,
-            "temperature": 0.7
-        }
-    }
+    scenes = generate_scenes(text)
 
-    r = requests.post(API_URL, headers=headers, json=payload)
-    r.raise_for_status()
+    # SHORTS
+    shorts_images = []
+    shorts_durations = []
 
-    result = r.json()[0]["generated_text"]
+    for s in scenes["shorts"]:
+        img_path = f"output/images/short_{s['scene']}.png"
+        download_placeholder(img_path)
+        shorts_images.append(img_path)
+        shorts_durations.append(s["duration"])
+
+    create_video(
+        shorts_images,
+        shorts_durations,
+        "output/videos/shorts.mp4",
+        size=(720, 1280)
+    )
+
+    # LONG
+    long_images = []
+    long_durations = []
+
+    for s in scenes["long"]:
+        img_path = f"output/images/long_{s['scene']}.png"
+        download_placeholder(img_path)
+        long_images.append(img_path)
+        long_durations.append(s["duration"])
+
+    create_video(
+        long_images,
+        long_durations,
+        "output/videos/long.mp4",
+        size=(1280, 720)
+    )
+
+    print("✅ Shorts ve Long video üretildi!")
+
+
+if __name__ == "__main__":
+    main()    result = r.json()[0]["generated_text"]
     return result
 
 if __name__ == "__main__":
