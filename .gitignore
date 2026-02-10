@@ -205,3 +205,29 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# --- ENV & SECRETS ---
+.env
+.env.*
+config.py
+
+# --- GENERATED FILES ---
+output/
+temp/
+*.mp4
+*.wav
+*.png
+*.jpg
+
+# --- AI / MODEL CACHE ---
+models/
+cache/
+*.ckpt
+*.safetensors
+
+# --- LOGS ---
+logs/
+*.log
+
+# --- VENV ---
+venv/
+.venv/
